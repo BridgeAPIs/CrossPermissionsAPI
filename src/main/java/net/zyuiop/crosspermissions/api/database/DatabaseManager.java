@@ -38,6 +38,7 @@ public class DatabaseManager {
 	}
 
 	public void checkDefaultGroup(String defaultGroup) {
+		refreshGroups();
 		PermissionGroup group = getGroupFromDB(defaultGroup);
 		if (group == null) {
 			pl.logInfo("Default Group doesn't exist, creating it.");
@@ -80,7 +81,7 @@ public class DatabaseManager {
 		Date begin = new Date();
 		// Refreshing groups //
 		
-		pl.logInfo("Refreshing groups (1/3)");
+		pl.logInfo("Refreshing groups (1/4)");
 		Jedis j = getJedis();
 		Map<String, String> groups = j.hgetAll("groups:list");
 		j.close();
@@ -99,7 +100,7 @@ public class DatabaseManager {
 		pl.logInfo("Done in "+(step.getTime()-begin.getTime())+"ms");
 		
 		// Cleaning users //
-		pl.logInfo("Cleaning offline users (2/3)");
+		pl.logInfo("Cleaning offline users (2/4)");
 		for (UUID user : usersCache.keySet()) {
 			if (!pl.isOnline(user)) {
 				usersCache.remove(user);
@@ -110,7 +111,7 @@ public class DatabaseManager {
 		step = new Date();
 		
 		// Updating users//
-		pl.logInfo("Updating online users (3/3)");
+		pl.logInfo("Updating online users (3/4)");
 		i = 0;
 		s = usersCache.size();
 		for (UUID user : usersCache.keySet()) {
@@ -118,6 +119,9 @@ public class DatabaseManager {
             refreshPerms(user);
 			i++;
 		}
+
+		pl.logInfo("Calling hooks (4/4)");
+		pl.onRefreshHook();
 
 		pl.logInfo("Done in "+(new Date().getTime()-step.getTime())+"ms");
 		step = new Date();

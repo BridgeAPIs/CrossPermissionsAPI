@@ -3,9 +3,10 @@ package net.zyuiop.crosspermissions.api.rawtypes;
 import net.zyuiop.crosspermissions.api.database.Database;
 import redis.clients.jedis.Jedis;
 
+import java.sql.Ref;
 import java.util.UUID;
 
-public interface RawPlugin {
+public interface RawPlugin extends RefreshHook {
 	public void logSevere(String log);
 	public void logWarning(String log);
 	public void logInfo(String log);
@@ -20,4 +21,6 @@ public interface RawPlugin {
 
     public UUID getPlayerId(String name);
     public String getPlayerName(UUID id);
+
+
 }
