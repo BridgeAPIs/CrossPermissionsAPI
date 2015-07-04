@@ -20,7 +20,10 @@ public class JedisSentinelDatabase implements Database {
         config.setMaxTotal(1024);
         config.setMaxWaitMillis(5000);
 
-        this.sentinel = new JedisSentinelPool(masterName, sentinels, config, password);
+        if (password == null)
+            this.sentinel = new JedisSentinelPool(masterName, sentinels, config);
+        else
+            this.sentinel = new JedisSentinelPool(masterName, sentinels, config, password);
     }
 
     @Override

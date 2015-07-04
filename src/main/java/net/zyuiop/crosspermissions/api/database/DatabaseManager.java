@@ -32,13 +32,20 @@ public class DatabaseManager {
 
         pl.logInfo("[DBMANAGER] Initialising task...");
 
-		pl.runRepeatedTaskAsync(new Runnable() {
-			public void run() {
-				refresh();
-			}
-		}, 5*60*20L, 5*20L);
+		pl.runRepeatedTaskAsync(this::refresh, 5*60*20L, 5*20L);
 
         pl.logInfo("[DBMANAGER] Database manager loaded !");
+	}
+
+	public void checkDefaultGroup(String defaultGroup) {
+		PermissionGroup group = getGroupFromDB(defaultGroup);
+		if (group == null) {
+			pl.logInfo("Default Group doesn't exist, creating it.");
+			PermissionGroup def = new PermissionGroup(this, UUID.randomUUID(), 1000, defaultGroup);
+			def.create();
+			refreshGroups();
+			pl.logInfo("Default Group created with ladder 1000 and UUID " + def.getEntityID());
+		}
 	}
 
     public ConcurrentHashMap<UUID, PermissionGroup> getGroupsCache() {

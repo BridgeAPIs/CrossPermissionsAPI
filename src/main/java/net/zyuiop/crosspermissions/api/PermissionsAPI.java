@@ -24,6 +24,10 @@ public class PermissionsAPI {
         plugin.logInfo("Loading DBManager");
 		this.dbmanager = new DatabaseManager(this, database);
 		this.defGroup = defGroup;
+
+		plugin.logInfo("Trying to recover default group " + defGroup);
+		dbmanager.checkDefaultGroup(defGroup);
+
         this.translator = new UUIDTranslator(this);
 		permissionsAPI = this;
         plugin.logInfo("Loaded PermissionsAPI successfully !");
