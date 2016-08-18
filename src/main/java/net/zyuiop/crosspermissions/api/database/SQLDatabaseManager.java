@@ -203,7 +203,7 @@ public class SQLDatabaseManager implements IDatabaseManager {
 	@Override
 	public PermissionGroup getGroupFromDB(UUID groupId) {
 		PermissionGroup g = database.query(connection -> {
-			PreparedStatement statement = connection.prepareStatement("SELECT crosspermissions_entities.entity_id, entity_name, entity_ladder, option_name, option_value, permission_name, permission_value, parent.entity_uuid AS parent_uuid " +
+			PreparedStatement statement = connection.prepareStatement("SELECT crosspermissions_entities.entity_id, crosspermissions_entities.entity_name, crosspermissions_entities.entity_ladder, option_name, option_value, permission_name, permission_value, parent.entity_uuid AS parent_uuid " +
 					"FROM crosspermissions_entities " +
 					"NATURAL LEFT JOIN crosspermissions_options " +
 					"NATURAL LEFT JOIN crosspermissions_parents " +
