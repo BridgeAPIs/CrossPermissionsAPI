@@ -155,7 +155,7 @@ public class SQLDatabaseManager implements IDatabaseManager {
 					"NATURAL LEFT JOIN crosspermissions_parents " +
 					"NATURAL LEFT JOIN crosspermissions_permissions " +
 					"JOIN crosspermissions_entities AS parent ON parent.entity_id = crosspermissions_parents.parent_id " +
-					"WHERE entity_type = 'user' AND entity_uuid = ?");
+					"WHERE crosspermissions_entities.entity_type = 'user' AND crosspermissions_entities.entity_uuid = ?");
 
 			statement.setString(1, id.toString());
 			ResultSet set = statement.executeQuery();
@@ -209,7 +209,7 @@ public class SQLDatabaseManager implements IDatabaseManager {
 					"NATURAL LEFT JOIN crosspermissions_parents " +
 					"NATURAL LEFT JOIN crosspermissions_permissions " +
 					"JOIN crosspermissions_entities AS parent ON parent.entity_id = crosspermissions_parents.parent_id " +
-					"WHERE entity_type = 'group' AND entity_uuid = ?");
+					"WHERE crosspermissions_entities.entity_type = 'group' AND crosspermissions_entities.entity_uuid = ?");
 
 			statement.setString(1, groupId.toString());
 			ResultSet set = statement.executeQuery();
@@ -250,12 +250,12 @@ public class SQLDatabaseManager implements IDatabaseManager {
 	@Override
 	public PermissionGroup getGroupWithoutParentsFromDB(UUID groupId) {
 		PermissionGroup g = database.query(connection -> {
-			PreparedStatement statement = connection.prepareStatement("SELECT crosspermissions_entities.entity_id, entity_name, entity_ladder, option_name, option_value, permission_name, permission_value " +
+			PreparedStatement statement = connection.prepareStatement("SELECT crosspermissions_entities.entity_id, crosspermissions_entities.entity_name, crosspermissions_entities.entity_ladder, option_name, option_value, permission_name, permission_value " +
 					"FROM crosspermissions_entities " +
 					"NATURAL LEFT JOIN crosspermissions_options " +
 					"NATURAL LEFT JOIN crosspermissions_permissions " +
 					"JOIN crosspermissions_entities AS parent ON parent.entity_id = crosspermissions_parents.parent_id " +
-					"WHERE entity_type = 'group' AND entity_uuid = ?");
+					"WHERE crosspermissions_entities.entity_type = 'group' AND crosspermissions_entities.entity_uuid = ?");
 
 			statement.setString(1, groupId.toString());
 			ResultSet set = statement.executeQuery();
