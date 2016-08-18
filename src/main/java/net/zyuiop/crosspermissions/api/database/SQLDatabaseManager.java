@@ -12,6 +12,7 @@ import net.zyuiop.crosspermissions.api.rawtypes.RawPlugin;
 import java.sql.*;
 import java.util.*;
 import java.util.Date;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -83,10 +84,10 @@ public class SQLDatabaseManager implements IDatabaseManager {
 		groupsTables.putAll(getGroups());
 
 		int i = 0, s = groupsTables.size();
-		for (UUID group : groupsTables.values()) {
-			getGroupFromDB(group);
+		for (Entry<String, UUID> group : groupsTables.entrySet()) {
+			getGroupFromDB(group.getValue());
 			i++;
-			pl.logInfo("... Refreshed group " + group + " (" + i + "/" + s + ")");
+			pl.logInfo("... Refreshed group " + group.getKey() + " " + group.getValue() + " (" + i + "/" + s + ")");
 		}
 
 		pl.logInfo("Done in " + (new Date().getTime() - begin.getTime()) + "ms");
@@ -154,7 +155,7 @@ public class SQLDatabaseManager implements IDatabaseManager {
 					"NATURAL LEFT JOIN crosspermissions_options " +
 					"NATURAL LEFT JOIN crosspermissions_parents " +
 					"NATURAL LEFT JOIN crosspermissions_permissions " +
-					"JOIN crosspermissions_entities AS parent ON parent.entity_id = crosspermissions_parents.parent_id " +
+					"LEFT JOIN crosspermissions_entities AS parent ON parent.entity_id = crosspermissions_parents.parent_id " +
 					"WHERE crosspermissions_entities.entity_type = 'user' AND crosspermissions_entities.entity_uuid = ?");
 
 			statement.setString(1, id.toString());
@@ -167,9 +168,12 @@ public class SQLDatabaseManager implements IDatabaseManager {
 
 			while (set.next()) {
 				entityId = set.getInt("entity_id");
-				dbparents.add(set.getString("parent_uuid"));
-				options.put(set.getString("option_name"), set.getString("option_value"));
-				perms.put(set.getString("permission_name"), set.getBoolean("permission_value"));
+				if (set.getString("parent_uuid") != null)
+					dbparents.add(set.getString("parent_uuid"));
+				if (set.getString("option_name") != null && set.getString("option_value") != null)
+					options.put(set.getString("option_name"), set.getString("option_value"));
+				if (set.getString("permission_name") != null && set.getString("permission_value") != null)
+					perms.put(set.getString("permission_name"), set.getBoolean("permission_value"));
 			}
 
 			// Formatage des données
@@ -208,7 +212,7 @@ public class SQLDatabaseManager implements IDatabaseManager {
 					"NATURAL LEFT JOIN crosspermissions_options " +
 					"NATURAL LEFT JOIN crosspermissions_parents " +
 					"NATURAL LEFT JOIN crosspermissions_permissions " +
-					"JOIN crosspermissions_entities AS parent ON parent.entity_id = crosspermissions_parents.parent_id " +
+					"LEFT JOIN crosspermissions_entities AS parent ON parent.entity_id = crosspermissions_parents.parent_id " +
 					"WHERE crosspermissions_entities.entity_type = 'group' AND crosspermissions_entities.entity_uuid = ?");
 
 			statement.setString(1, groupId.toString());
@@ -226,9 +230,12 @@ public class SQLDatabaseManager implements IDatabaseManager {
 			Map<String, Boolean> perms = Maps.newHashMap();
 
 			do {
-				dbparents.add(set.getString("parent_uuid"));
-				options.put(set.getString("option_name"), set.getString("option_value"));
-				perms.put(set.getString("permission_name"), set.getBoolean("permission_value"));
+				if (set.getString("parent_uuid") != null)
+					dbparents.add(set.getString("parent_uuid"));
+				if (set.getString("option_name") != null && set.getString("option_value") != null)
+					options.put(set.getString("option_name"), set.getString("option_value"));
+				if (set.getString("permission_name") != null && set.getString("permission_value") != null)
+					perms.put(set.getString("permission_name"), set.getBoolean("permission_value"));
 			} while (set.next());
 
 			// Formatage des données
@@ -255,7 +262,7 @@ public class SQLDatabaseManager implements IDatabaseManager {
 					"FROM crosspermissions_entities " +
 					"NATURAL LEFT JOIN crosspermissions_options " +
 					"NATURAL LEFT JOIN crosspermissions_permissions " +
-					"JOIN crosspermissions_entities AS parent ON parent.entity_id = crosspermissions_parents.parent_id " +
+					"LEFT JOIN crosspermissions_entities AS parent ON parent.entity_id = crosspermissions_parents.parent_id " +
 					"WHERE crosspermissions_entities.entity_type = 'group' AND crosspermissions_entities.entity_uuid = ?");
 
 			statement.setString(1, groupId.toString());
@@ -272,8 +279,10 @@ public class SQLDatabaseManager implements IDatabaseManager {
 			Map<String, Boolean> perms = Maps.newHashMap();
 
 			do {
-				options.put(set.getString("option_name"), set.getString("option_value"));
-				perms.put(set.getString("permission_name"), set.getBoolean("permission_value"));
+				if (set.getString("option_name") != null && set.getString("option_value") != null)
+					options.put(set.getString("option_name"), set.getString("option_value"));
+				if (set.getString("permission_name") != null && set.getString("permission_value") != null)
+					perms.put(set.getString("permission_name"), set.getBoolean("permission_value"));
 			} while (set.next());
 
 			// Génération de l'objet
