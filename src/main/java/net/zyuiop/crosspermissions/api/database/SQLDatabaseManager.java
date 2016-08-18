@@ -242,8 +242,9 @@ public class SQLDatabaseManager implements IDatabaseManager {
 			return group;
 		});
 
-		// Retour
-		groupsCache.put(groupId, g);
+		if (g != null)
+			groupsCache.put(groupId, g);
+
 		return g;
 	}
 
@@ -281,7 +282,9 @@ public class SQLDatabaseManager implements IDatabaseManager {
 			return group;
 		});
 
-		groupsCache.put(groupId, g);
+		if (g != null)
+			groupsCache.put(groupId, g);
+
 		return g;
 	}
 
