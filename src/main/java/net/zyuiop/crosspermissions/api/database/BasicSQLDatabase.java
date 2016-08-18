@@ -16,6 +16,12 @@ public class BasicSQLDatabase implements SQLDatabase {
 	private final String password;
 
 	public BasicSQLDatabase(String host, int port, String database, String userName, String password) {
+		try {
+			Class.forName("com.mysql.jdbc.Driver").newInstance();
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+
 		this.host = host;
 		this.port = port;
 		this.database = database;
