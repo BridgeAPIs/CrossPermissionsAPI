@@ -1,7 +1,6 @@
 package net.zyuiop.crosspermissions.api;
 
-import net.zyuiop.crosspermissions.api.database.RedisDatabase;
-import net.zyuiop.crosspermissions.api.database.DatabaseManager;
+import net.zyuiop.crosspermissions.api.database.*;
 import net.zyuiop.crosspermissions.api.permissions.PermissionGroup;
 import net.zyuiop.crosspermissions.api.permissions.PermissionUser;
 import net.zyuiop.crosspermissions.api.rawtypes.RawPlayer;
@@ -14,20 +13,31 @@ public class PermissionsAPI {
 
 	protected RawPlugin plugin;
 	protected String defGroup;
-	protected DatabaseManager dbmanager = null;
+	protected IDatabaseManager dbmanager = null;
 	public static PermissionsAPI permissionsAPI;
     protected UUIDTranslator translator;
-	
-	public PermissionsAPI(RawPlugin plugin, String defGroup, RedisDatabase database) {
-		this.plugin = plugin;
-		plugin.logInfo("Loading PermissionsAPI");
-        plugin.logInfo("Loading DBManager");
+
+	public PermissionsAPI(RawPlugin plugin, String defGroupn, RedisDatabase database) {
+		this(plugin, defGroupn);
 		this.dbmanager = new DatabaseManager(this, database);
-		this.defGroup = defGroup;
 
 		plugin.logInfo("Trying to recover default group " + defGroup);
 		dbmanager.checkDefaultGroup(defGroup);
+	}
 
+	public PermissionsAPI(RawPlugin plugin, String defGroupn, SQLDatabase database) {
+		this(plugin, defGroupn);
+		this.dbmanager = new SQLDatabaseManager(this, database);
+
+		plugin.logInfo("Trying to recover default group " + defGroup);
+		dbmanager.checkDefaultGroup(defGroup);
+	}
+
+	private PermissionsAPI(RawPlugin plugin, String defGroup) {
+		this.plugin = plugin;
+		plugin.logInfo("Loading PermissionsAPI");
+        plugin.logInfo("Loading DBManager");
+		this.defGroup = defGroup;
         this.translator = new UUIDTranslator(this);
 		permissionsAPI = this;
         plugin.logInfo("Loaded PermissionsAPI successfully !");
@@ -60,7 +70,7 @@ public class PermissionsAPI {
 		return dbmanager.getGroup(name);
 	}
 
-    public DatabaseManager getManager() {
+    public IDatabaseManager getManager() {
         return dbmanager;
     }
 }
