@@ -432,6 +432,8 @@ public class SQLDatabaseManager implements IDatabaseManager {
 				statement.setInt(2, otherId);
 				statement.executeUpdate();
 			});
+		} else {
+			pl.logSevere("Missing entity ID ! Entity : " + id + " / " + entity.getType() + "; parent ID : " + otherId + " / " + parent.getGroupName() + ".");
 		}
 	}
 
@@ -451,6 +453,10 @@ public class SQLDatabaseManager implements IDatabaseManager {
 	}
 
 	private int getEntityID(PermissionEntity entity) {
+		return getEntityID(entity, true);
+	}
+
+	private int getEntityID(PermissionEntity entity, boolean first) {
 		if (entity.getDatabaseId() > -1)
 			return entity.getDatabaseId();
 
@@ -464,6 +470,14 @@ public class SQLDatabaseManager implements IDatabaseManager {
 				int id = set.getInt("entity_id");
 				entity.setDatabaseId(id);
 				return id;
+			} else if (first && entity instanceof PermissionUser) {
+				pl.logInfo("Player " + entity.getEntityID() + " doesn't exist, inserting.");
+				statement = connection.prepareStatement("INSERT INTO crosspermissions_entities(entity_uuid, entity_type) VALUES (?, ?)");
+				statement.setString(1, entity.getEntityID().toString());
+				statement.setString(2, entity.getType());
+				statement.executeUpdate();
+
+				return getEntityID(entity, false);
 			}
 			return -1;
 		});

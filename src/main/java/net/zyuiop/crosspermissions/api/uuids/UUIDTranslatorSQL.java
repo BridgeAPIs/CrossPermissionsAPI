@@ -30,6 +30,8 @@ public final class UUIDTranslatorSQL extends UUIDTranslator {
 			PreparedStatement statement = connection.prepareStatement("INSERT INTO crosspermissions_uuidcache(player_uuid, player_name) VALUES (?, ?) ON DUPLICATE KEY UPDATE player_name = ?, player_uuid = ?");
 			statement.setString(1, name);
 			statement.setString(2, uuid.toString());
+
+			statement.execute();
 		});
 	}
 
