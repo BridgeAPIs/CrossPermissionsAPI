@@ -332,7 +332,7 @@ public class SQLDatabaseManager implements IDatabaseManager {
 	@Override
 	public void createGroup(PermissionGroup group) {
 		database.execute(connection -> {
-			PreparedStatement statement = connection.prepareStatement("INSERT INTO crosspermissions_entities(entity_uuid, 'group', entity_ladder, entity_name) VALUES (?, ?, ?)");
+			PreparedStatement statement = connection.prepareStatement("INSERT INTO crosspermissions_entities(entity_uuid, entity_type, entity_ladder, entity_name) VALUES (?, 'group', ?, ?)");
 			statement.setString(1, group.getEntityID().toString());
 			statement.setInt(2, group.getLadder());
 			statement.setString(3, group.getGroupName());

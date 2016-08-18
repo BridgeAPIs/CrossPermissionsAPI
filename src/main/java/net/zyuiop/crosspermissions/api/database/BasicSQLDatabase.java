@@ -31,12 +31,7 @@ public class BasicSQLDatabase implements SQLDatabase {
 
 	@Override
 	public Connection getConnection() throws SQLException {
-		Properties connectionProps = new Properties();
-		connectionProps.put("user", userName);
-		connectionProps.put("password", password);
-		connectionProps.put("useColumnNamesInFindColumn", true);
-
-		return DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/" + database, connectionProps);
+		return DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/" + database, userName, password);
 	}
 
 	@Override
