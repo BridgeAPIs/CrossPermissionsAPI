@@ -1,9 +1,5 @@
 package net.zyuiop.crosspermissions.api.rawtypes;
 
-import net.zyuiop.crosspermissions.api.database.Database;
-import redis.clients.jedis.Jedis;
-
-import java.sql.Ref;
 import java.util.UUID;
 
 public interface RawPlugin extends RefreshHook {

@@ -1,6 +1,6 @@
 package net.zyuiop.crosspermissions.api;
 
-import net.zyuiop.crosspermissions.api.database.Database;
+import net.zyuiop.crosspermissions.api.database.RedisDatabase;
 import net.zyuiop.crosspermissions.api.database.DatabaseManager;
 import net.zyuiop.crosspermissions.api.permissions.PermissionGroup;
 import net.zyuiop.crosspermissions.api.permissions.PermissionUser;
@@ -18,7 +18,7 @@ public class PermissionsAPI {
 	public static PermissionsAPI permissionsAPI;
     protected UUIDTranslator translator;
 	
-	public PermissionsAPI(RawPlugin plugin, String defGroup, Database database) {
+	public PermissionsAPI(RawPlugin plugin, String defGroup, RedisDatabase database) {
 		this.plugin = plugin;
 		plugin.logInfo("Loading PermissionsAPI");
         plugin.logInfo("Loading DBManager");

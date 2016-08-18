@@ -7,7 +7,7 @@ import redis.clients.jedis.Jedis;
  * A copy of the license is provided with the source
  * (C) zyuiop 2015
  */
-public interface Database {
+public interface RedisDatabase {
 
     public Jedis getJedis();
 

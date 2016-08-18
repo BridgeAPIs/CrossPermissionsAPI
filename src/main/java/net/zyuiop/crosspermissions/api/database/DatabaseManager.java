@@ -10,8 +10,9 @@ import redis.clients.jedis.Jedis;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
-public class DatabaseManager {
+public class DatabaseManager implements IDatabaseManager {
 
 	protected ConcurrentHashMap<UUID, PermissionGroup> groupsCache = new ConcurrentHashMap<>();
 	protected ConcurrentHashMap<UUID, PermissionUser> usersCache = new ConcurrentHashMap<>();
@@ -19,13 +20,13 @@ public class DatabaseManager {
 
 	protected RawPlugin pl;
 	protected PermissionsAPI api;
-    protected final Database database;
+    protected final RedisDatabase database;
 
 	public Jedis getJedis() {
 		return database.getJedis();
 	}
 	
-	public DatabaseManager(PermissionsAPI api, Database database) {
+	public DatabaseManager(PermissionsAPI api, RedisDatabase database) {
         this.database = database;
         this.pl = api.getPlugin();
 		this.api = api;
@@ -37,6 +38,7 @@ public class DatabaseManager {
         pl.logInfo("[DBMANAGER] Database manager loaded !");
 	}
 
+	@Override
 	public void checkDefaultGroup(String defaultGroup) {
 		refreshGroups();
 		PermissionGroup group = getGroupFromDB(defaultGroup);
@@ -49,10 +51,12 @@ public class DatabaseManager {
 		}
 	}
 
-    public ConcurrentHashMap<UUID, PermissionGroup> getGroupsCache() {
+    @Override
+	public ConcurrentHashMap<UUID, PermissionGroup> getGroupsCache() {
         return groupsCache;
     }
 	
+	@Override
 	public void refreshGroups() {
 		Date begin = new Date();
 		pl.logInfo("Refreshing groups (Forced operation)");
@@ -74,6 +78,7 @@ public class DatabaseManager {
 		pl.logInfo("Done in "+(new Date().getTime()-begin.getTime())+"ms");
 	}
 	
+	@Override
 	public void refresh() {
 		pl.logInfo("#==========================#");
 		pl.logInfo("# Refreshing Permissions ! #");
@@ -133,7 +138,8 @@ public class DatabaseManager {
 		
 	}
 
-    public void refreshPerms(UUID user) {
+    @Override
+	public void refreshPerms(UUID user) {
         RawPlayer p = pl.getPlayer(user);
         PermissionUser u = this.usersCache.get(user);
         if (u != null) {
@@ -143,7 +149,8 @@ public class DatabaseManager {
         }
     }
 	
-	protected PermissionUser getUserFromDB(UUID id) {
+	@Override
+	public PermissionUser getUserFromDB(UUID id) {
 		String db_prefix = "user:"+id.toString()+":";
 		Jedis j = getJedis();
 		
@@ -179,7 +186,8 @@ public class DatabaseManager {
 		return u;
 	}
 	
-	protected PermissionGroup getGroupFromDB(String groupName) {
+	@Override
+	public PermissionGroup getGroupFromDB(String groupName) {
 		UUID val = groupsTables.get(groupName);
 		if (val == null) 
 			return null;
@@ -187,7 +195,8 @@ public class DatabaseManager {
 			return getGroupFromDB(val);
 	}
 	
-	protected PermissionGroup getGroupFromDB(UUID groupId) {
+	@Override
+	public PermissionGroup getGroupFromDB(UUID groupId) {
 		String db_prefix = "groups:"+groupId+":";
 		Jedis j = getJedis();
 		
@@ -213,8 +222,7 @@ public class DatabaseManager {
 		// Formatage des données
 		ArrayList<PermissionGroup> parents = new ArrayList<>();
 		if (DBparents != null && DBparents.size() > 0)
-		    for (String gpe : DBparents)
-				parents.add(getGroup(UUID.fromString(gpe)));
+			parents.addAll(DBparents.stream().map(gpe -> getGroup(UUID.fromString(gpe))).collect(Collectors.toList()));
 		
 		HashMap<String, String> options = new HashMap<>();
 		if (DBoptions != null)
@@ -234,7 +242,8 @@ public class DatabaseManager {
 		return g;
 	}
 
-    protected PermissionGroup getGroupWithoutParentsFromDB(UUID groupId) {
+    @Override
+	public PermissionGroup getGroupWithoutParentsFromDB(UUID groupId) {
         String db_prefix = "groups:"+groupId+":";
         Jedis j = getJedis();
 
@@ -275,6 +284,7 @@ public class DatabaseManager {
         return g;
     }
 	
+	@Override
 	public void moveGroup(String oldName, String newName) {
 		Jedis j = getJedis();
 		String val = j.hget("groups:list", oldName);
@@ -288,6 +298,7 @@ public class DatabaseManager {
 	}
 	
 	// Si le groupe n'existe pas c'est que le refresh n'est pas passé.
+	@Override
 	public PermissionGroup getGroup(String name) {
 		UUID groupId = this.groupsTables.get(name);
 		if (groupId == null)
@@ -295,6 +306,7 @@ public class DatabaseManager {
 		return getGroup(groupId);
 	}
 	
+	@Override
 	public PermissionGroup getGroup(UUID groupId) {
 		PermissionGroup r = groupsCache.get(groupId);
 		if (r == null)
@@ -302,48 +314,107 @@ public class DatabaseManager {
 		return r;
 	}
 	
+	@Override
 	public PermissionUser getUser(UUID name) {
 		if (!usersCache.containsKey(name))
 			return getUserFromDB(name);
 		return usersCache.get(name);
 	}
 
+	@Override
 	public PermissionUser getUserFromCache(UUID name) {
 		if (!usersCache.containsKey(name))
 			return null;
 		return usersCache.get(name);
 	}
-	
+
+	@Override
+	public void createGroup(PermissionGroup group) {
+		this.set(group, "ladder", "" + group.getLadder());
+		this.set(group, "name", group.getGroupName());
+		Jedis j = this.getJedis();
+		j.hset("groups:list", group.getGroupName(), group.getEntityID().toString());
+		j.close();
+	}
+
+	@Override
+	public void updateGroupLadder(PermissionGroup group) {
+		this.set(group, "ladder", "" + group.getLadder());
+	}
+
+	@Override
+	public void setProperty(PermissionEntity entity, String name, String value) {
+		this.hset(entity, DataType.OPTION, name, value);
+	}
+
+	@Override
+	public void deleteProperty(PermissionEntity entity, String name) {
+		this.hdel(entity, DataType.OPTION, name);
+	}
+
+	@Override
+	public void setPermission(PermissionEntity entity, String name, Boolean value) {
+		this.hset(entity, DataType.PERMISSION, name, value.toString());
+	}
+
+	@Override
+	public void deletePermission(PermissionEntity entity, String name) {
+		this.hdel(entity, DataType.PERMISSION, name);
+	}
+
+	@Override
+	public void addParent(PermissionEntity entity, PermissionGroup parent) {
+		this.lput(entity, DataType.PARENT, parent.getEntityID().toString());
+	}
+
+	@Override
+	public void removeParent(PermissionEntity entity, PermissionGroup parent) {
+		this.lrem(entity, DataType.PARENT, parent.getEntityID().toString());
+	}
+
+	@Override
+	public void removeGroup(PermissionGroup group) {
+		// Remove data
+		del(group, "ladder");
+		del(group, "name");
+		del(group, "parents");
+		del(group, "perms");
+		del(group, "options");
+
+		// Remove in list
+		Jedis j = this.getJedis();
+		j.hdel("groups:list", group.getGroupName());
+		j.close();
+	}
+
+
+
 	/** Opérations dans la DB **/
-	public void set(PermissionEntity e, String key, final String data) {
+	private void set(PermissionEntity e, String key, final String data) {
 		final String datakey = e.getDbPrefix()+e.getEntityID()+":"+key;
-		pl.runAsync(new Runnable() {
-			public void run() {
-				Jedis j = getJedis();
-				try {
-					j.set(datakey, data);
-				} finally {
-					j.close();
-				}
+		pl.runAsync(() -> {
+			Jedis j = getJedis();
+			try {
+				j.set(datakey, data);
+			} finally {
+				j.close();
 			}
 		});
 	}
 
-    public void del(PermissionEntity e, String key) {
+	private void del(PermissionEntity e, String key) {
         final String datakey = e.getDbPrefix()+e.getEntityID()+":"+key;
-        pl.runAsync(new Runnable() {
-            public void run() {
-                Jedis j = getJedis();
-                try {
-                    j.del(datakey);
-                } finally {
-                    j.close();
-                }
-            }
-        });
+        pl.runAsync(() -> {
+			Jedis j = getJedis();
+			try {
+				j.del(datakey);
+			} finally {
+				j.close();
+			}
+		});
     }
-	
-	public void lput(PermissionEntity e, DataType type, final String data) {
+
+	private void lput(PermissionEntity e, DataType type, final String data) {
 		final String datakey = e.getDbPrefix()+e.getEntityID()+":"+type.getKey();
 		pl.runAsync(new Runnable() {
 			public void run() {
@@ -356,8 +427,8 @@ public class DatabaseManager {
 			}
 		});
 	}
-	
-	public void lrem(PermissionEntity e, DataType type, final String data) {
+
+	private void lrem(PermissionEntity e, DataType type, final String data) {
 		final String datakey = e.getDbPrefix()+e.getEntityID()+":"+type.getKey();
 		pl.runAsync(new Runnable() {
 			public void run() {
@@ -370,14 +441,14 @@ public class DatabaseManager {
 			}
 		});
 	}
-	
-	public void lrename(PermissionEntity e, DataType type, String oldData, String newData) {
+
+	private void lrename(PermissionEntity e, DataType type, String oldData, String newData) {
 		this.lrem(e, type, oldData);
 		this.lput(e, type, newData);
 	}
 	
 	/*** Opérations sur les hashmaps ***/
-	public void hset(PermissionEntity e, DataType type, final String hashkey, final String data) {
+	private void hset(PermissionEntity e, DataType type, final String hashkey, final String data) {
 		final String datakey = e.getDbPrefix()+e.getEntityID()+":"+type.getKey();
 		pl.runAsync(new Runnable() {
 			public void run() {
@@ -391,21 +462,19 @@ public class DatabaseManager {
 		});
 	}
 	
-	public void hdel(PermissionEntity e, DataType type, final String hashkey) {
+	private void hdel(PermissionEntity e, DataType type, final String hashkey) {
 		final String datakey = e.getDbPrefix()+e.getEntityID()+":"+type.getKey();
-		pl.runAsync(new Runnable() {
-			public void run() {
-				Jedis j = getJedis();
-				try {
-					j.hdel(datakey, hashkey);
-				} finally {
-					j.close();
-				}
+		pl.runAsync(() -> {
+			Jedis j = getJedis();
+			try {
+				j.hdel(datakey, hashkey);
+			} finally {
+				j.close();
 			}
 		});
 	}
 	
-	public String hget(PermissionEntity e, DataType type, String hashkey) {
+	private String hget(PermissionEntity e, DataType type, String hashkey) {
 		String datakey = e.getDbPrefix()+e.getEntityID()+":"+type.getKey();
 		Jedis j = getJedis();
 		String ret = null;

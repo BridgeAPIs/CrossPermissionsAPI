@@ -11,7 +11,7 @@ import java.util.Set;
  * A copy of the license is provided with the source
  * (C) zyuiop 2015
  */
-public class JedisSentinelDatabase implements Database {
+public class JedisSentinelDatabase implements RedisDatabase {
 
     private final JedisSentinelPool sentinel;
 

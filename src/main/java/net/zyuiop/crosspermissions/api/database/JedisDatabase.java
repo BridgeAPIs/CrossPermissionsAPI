@@ -7,7 +7,7 @@ import redis.clients.jedis.Jedis;
  * A copy of the license is provided with the source
  * (C) zyuiop 2015
  */
-public class JedisDatabase implements Database {
+public class JedisDatabase implements RedisDatabase {
     private final String host;
     private final int port;
     private final String password;
