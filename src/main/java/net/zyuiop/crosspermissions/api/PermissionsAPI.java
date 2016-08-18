@@ -6,6 +6,8 @@ import net.zyuiop.crosspermissions.api.permissions.PermissionUser;
 import net.zyuiop.crosspermissions.api.rawtypes.RawPlayer;
 import net.zyuiop.crosspermissions.api.rawtypes.RawPlugin;
 import net.zyuiop.crosspermissions.api.uuids.UUIDTranslator;
+import net.zyuiop.crosspermissions.api.uuids.UUIDTranslatorRedis;
+import net.zyuiop.crosspermissions.api.uuids.UUIDTranslatorSQL;
 
 import java.util.UUID;
 
@@ -23,6 +25,7 @@ public class PermissionsAPI {
 
 		plugin.logInfo("Trying to recover default group " + defGroup);
 		dbmanager.checkDefaultGroup(defGroup);
+		this.translator = new UUIDTranslatorRedis(this, database);
 	}
 
 	public PermissionsAPI(RawPlugin plugin, String defGroupn, SQLDatabase database) {
@@ -31,6 +34,7 @@ public class PermissionsAPI {
 
 		plugin.logInfo("Trying to recover default group " + defGroup);
 		dbmanager.checkDefaultGroup(defGroup);
+		this.translator = new UUIDTranslatorSQL(this, database);
 	}
 
 	private PermissionsAPI(RawPlugin plugin, String defGroup) {
@@ -38,7 +42,6 @@ public class PermissionsAPI {
 		plugin.logInfo("Loading PermissionsAPI");
         plugin.logInfo("Loading DBManager");
 		this.defGroup = defGroup;
-        this.translator = new UUIDTranslator(this);
 		permissionsAPI = this;
         plugin.logInfo("Loaded PermissionsAPI successfully !");
 	}
