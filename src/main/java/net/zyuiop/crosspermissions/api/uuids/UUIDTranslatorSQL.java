@@ -31,6 +31,9 @@ public final class UUIDTranslatorSQL extends UUIDTranslator {
 			statement.setString(1, name);
 			statement.setString(2, uuid.toString());
 
+			statement.setString(3, name);
+			statement.setString(4, uuid.toString());
+
 			statement.execute();
 		});
 	}
